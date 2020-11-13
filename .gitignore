@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+data
+database.ini
+zerodha.ini
+run.bat
+final.csv
+certs
