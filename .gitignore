@@ -129,8 +129,7 @@ dmypy.json
 .pyre/
 
 data
-database.ini
-zerodha.ini
+config
+certs
 run.bat
 final.csv
-certs

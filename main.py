@@ -11,7 +11,7 @@ def read_root():
     pass
 
 
-@app.get("/")
+@app.get("/zerodha")
 def read_root(request_token,load_data):
     kite = store.getKiteConnector(request_token)
     print(load_data)
@@ -26,11 +26,15 @@ def read_root():
     return res
 
 
-@app.get("/loadData")
-def load_data():
-    url = ("https://kite.trade/connect/login?api_key=48pj63ie6z60osq7&v=3&redirect_params=load_data=True")
-    response = RedirectResponse(url=url)
-    return response
+@app.get("/loadData/{source}")
+def load_data(source):
+    if source == 'zerodha':
+        url = ("https://kite.trade/connect/login?api_key=48pj63ie6z60osq7&v=3&redirect_params=load_data=True")
+        response = RedirectResponse(url=url)
+        return response
+    else:
+        df = store.getNSEPyFullPriceData(1500)
+        store.writeToDB(df)
 
 
 

@@ -1,19 +1,20 @@
 #!/usr/bin/python
 import psycopg2
+from psycopg2 import pool
 from config import config
 import pandas as pd
-
+postgreSQL_pool = ""
 def connect():
     """ Connect to the PostgreSQL database server """
     conn = None
     try:
-        # read connection parameters
+        global postgreSQL_pool
         params = config()
-
-        # connect to the PostgreSQL server
-        print('Connecting to the PostgreSQL database...')
-        conn = psycopg2.connect(**params)
-
+        if(postgreSQL_pool == ""):
+            postgreSQL_pool = psycopg2.pool.SimpleConnectionPool(1, 20,**params)
+        
+            print("Connection pool created successfully")
+        conn = postgreSQL_pool.getconn()
 	# close the communication with the PostgreSQL
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
