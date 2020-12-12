@@ -19,10 +19,16 @@ def getHistoryData(kite,ins_token,date1,date2,interval):
     result = kite.historical_data(ins_token,date1,date2, interval)
     return result
 
+def getMaxDate():
+    conn = db.connect()
+    df = db.query(conn,'SELECT max(timestamp) AS max_timestamp FROM stock_price_intraday')
+    return df
+
 def getStockData():
     conn = db.connect()
     nifty50Map = db.query(conn,'SELECT id,zerodha_token, symbol, name FROM stock')
-    nifty50Map = nifty50Map.set_index('symbol').to_dict()
+    nifty50Map = nifty50Map.set_index('zerodha_token')
+    nifty50Map = nifty50Map.to_dict()
     nifty50Map = nifty50Map['id']
     return nifty50Map
 
@@ -34,24 +40,36 @@ def getKiteConnector(reqToken):
     return kite
 def getFullPriceData(kite,dayRange,interval):
     stockData = getStockData()
-    today = date.today()
-    date1 = (today - timedelta(days = dayRange)).strftime("%Y-%m-%d") +' 00:00:00'
-    date2 = today.strftime("%Y-%m-%d") +' 23:59:59'
-    fullDf = pd.DataFrame()
-    for instr in stockData:
-        rawData = getHistoryData(kite,instr,date1,date2,interval)
-        df = pd.DataFrame(rawData)        
-        df['stock_id'] = pd.Series([stockData[instr] for x in range(len(df.index))], index=df.index)
-        if(fullDf.empty):
-            fullDf = df
-        else:
-            fullDf = fullDf.append(df)
+    today = datetime.now()
+    max_date_df = getMaxDate()
+    # max_timestamp = max_date_df['max_timestamp'][0]
+    # if max_timestamp:
+    #     start = pd.to_datetime(max_date_df['max_timestamp'][0])       
+    # else:
+    start = (today - timedelta(days = dayRange))
+    end = today
+    date1 = start
+    date2 = (start + timedelta(days = 60))
+    while end >= date1:
+        strDate1 = date1.strftime("%Y-%m-%d") +' 8:59:59'
+        strDate2 = date2.strftime("%Y-%m-%d") +' 23:59:59'
+        print(strDate1,strDate2)
+        fullDf = pd.DataFrame()
+        for instr in stockData:
+            rawData = getHistoryData(kite,instr,strDate1,strDate2,interval)
+            df = pd.DataFrame(rawData)        
+            df['stock_id'] = pd.Series([stockData[instr] for x in range(len(df.index))], index=df.index)
+            if(fullDf.empty):
+                fullDf = df
+            else:
+                fullDf = fullDf.append(df)
+            date1 = date1 + timedelta(days = 60)
+            date2 = date2 + timedelta(days = 60)
     return fullDf
-def writeToDB(df):
+def writeToDB(df,table="stock_price"):
     conn = db.connect()    
     df = df.rename(columns={"date": "timestamp"})
-    print(df)
-    db.execute_mogrify(conn,df,'stock_price')
+    db.execute_mogrify(conn,df,table)
 
 
 def getNSEPyHistoryData(stock,start,end):
@@ -68,14 +86,23 @@ def getNSEPyHistoryData(stock,start,end):
     })
     return rawData
 
+def getInstruments(kite):
+    result = kite.instruments(exchange = 'nse')
+    return result
+
 def getNSEPyFullPriceData(dayRange):
     stockData = getStockData()
-    today = date.today()
-    date1 = (today - timedelta(days = dayRange))
-    date2 = today
+    today = datetime.now()
+    date2 = today    
+    max_date_df = getMaxDate()
+    max_timestamp = max_date_df['max_timestamp'][0]
+    if max_timestamp:
+        date1 = max_timestamp     
+    else:
+        date1 = (today - timedelta(days = dayRange))
+    print(date1,date2)
     fullDf = pd.DataFrame()
     for instr in stockData:
-        print(instr,stockData[instr])        
         df = getNSEPyHistoryData(instr,date1,date2)     
         df['stock_id'] = pd.Series([stockData[instr] for x in range(len(df.index))], index=df.index)
         if(fullDf.empty):
