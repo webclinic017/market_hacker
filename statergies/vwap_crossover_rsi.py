@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import datetime  # For datetime objects
+from datetime import datetime as datetime  # For datetime objects
 import pandas as pd  # To manage paths
 import sys  # To find out the script name (in argv[0])
 import ta
@@ -27,7 +27,7 @@ class VWAPRSICO(bt.Strategy):
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
         self.dataclose = self.datas[0].close
-        self.vwap = vwap(period = 15 )
+        self.vwap = vwap(period = 10 )
         self.StochRSI = StochRSI()
         
 
@@ -62,27 +62,23 @@ class VWAPRSICO(bt.Strategy):
                 self.bought = False
                 self.log('sold @ Close, %.2f' % self.data.close[0])
 
+        self.log(f'''xxx Close: {self.data.close[0]} ,Volume {self.data.volume[0]}''')
+
+
 
 if __name__ == '__main__':
 
-    # self.data.close[0] < self.data.open[0] or Datas are in a subfolder of the samples. Need to find where the script is
-    # because it could have been called from anywhere
     # Get data from database
-    minutePriceData = model.getMinutePriceData(dayInterval = 20)
-    #priceData = model.getMinutePriceData(dayInterval = 3)
-
-    #priceData = priceData[priceData['symbol'] == 'INFY']
-    allMinutePriceData = minutePriceData.set_index('datetime')
-    
-    # priceData = priceData.set_index('datetime')
-    # Create a Data Feeds
-    # priceData = bt.feeds.PandasData(dataname=priceData)
-    
-
+    allMinutePriceData = model.getMinutePriceData(start = datetime(2020,1,1) ,end = datetime(2020,12,1))    
     finalOutput = {}
-    symbols = ['INFY','TCS','GAIL','WIPRO','HDFCBANK','INDUSINDBK']
+    excludedSymbols = ['BAJAJHLDNG','HINDZINC','WIPRO','ONGC','ADANIGREEN','ADANITRANS','DMART']
+    symbols = allMinutePriceData['symbol'].unique().tolist()
+    for ex_symbol in excludedSymbols:
+        symbols.remove(ex_symbol)
     for symbol in symbols:
+        #print(symbol)        
         minutePriceData = allMinutePriceData[allMinutePriceData['symbol'] == symbol]
+        minutePriceData = minutePriceData.set_index('datetime')        
         output = {}
         DFList = [group[1] for group in minutePriceData.groupby(minutePriceData.index.date)]        
         for df in DFList:
@@ -92,13 +88,11 @@ if __name__ == '__main__':
             # Add a strategy
             cerebro.addstrategy(VWAPRSICO)
             # Add the Data Feeds to Cerebro
-            #cerebro.adddata(priceData)
-            #cerebro.resampledata(minutePriceData,timeframe = bt.TimeFrame.Minutes,compression = 5)
             cerebro.adddata(minutePriceData)
             # Set our desired cash start
             cerebro.broker.setcash(10000.0)
 
-            cerebro.addsizer(bt.sizers.AllInSizerInt)
+            #cerebro.addsizer(bt.sizers.AllInSizerInt)
             # Print out the starting conditions
             startvalue =  cerebro.broker.getvalue()
             #print('Starting Portfolio Value: %.2f' % startvalue)
@@ -120,6 +114,7 @@ if __name__ == '__main__':
     print(result.sum())
     print(result.sum().mean())
     print(result.sum(axis =1))    
+    print('Daily avg')
     print(result.sum(axis =1).mean())
     
     

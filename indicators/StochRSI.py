@@ -1,5 +1,7 @@
 from backtrader.indicators import Indicator, MovAv, RelativeStrengthIndex, Highest, Lowest
 import backtrader as bt
+from backtrader import  DivByZero
+
 class StochasticRSI(Indicator):
       """
       K - The time period to be used in calculating the %K. 3 is the default.
@@ -37,10 +39,10 @@ class StochasticRSI(Indicator):
         self.plotinfo.plotyhlines = [self.p.upperband, self.p.lowerband]
   
       def __init__(self):
-        rsi = bt.ind.RSI(period=self.p.rsi_period)
+        rsi = bt.ind.RSI_Safe(period=self.p.rsi_period)
         rsi_ll = bt.ind.Lowest(rsi, period=self.p.rsi_period)
         rsi_hh = bt.ind.Highest(rsi, period=self.p.rsi_period)
-        stochrsi = (rsi - rsi_ll) / (rsi_hh - rsi_ll)
-
+        stochrsi = DivByZero((rsi - rsi_ll),(rsi_hh - rsi_ll),zero=True)
+        #stochrsi = (rsi - rsi_ll)/(rsi_hh - rsi_ll)  
         self.l.fastk = k = self.p.movav(100.0 * stochrsi, period=self.p.k_period)
         self.l.fastd = self.p.movav(k, period=self.p.d_period)
