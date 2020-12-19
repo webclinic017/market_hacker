@@ -4,6 +4,10 @@ from psycopg2 import pool
 from config import config
 import pandas as pd
 postgreSQL_pool = ""
+def putback_conn(conn):
+    global postgreSQL_pool
+    if(postgreSQL_pool != ""):
+        postgreSQL_pool.putconn(conn)
 def connect():
     """ Connect to the PostgreSQL database server """
     conn = None
@@ -40,13 +44,12 @@ def execute_mogrify(conn, df, table):
     try:
         cursor.execute(query, tuples)
         conn.commit()
+        print("execute_mogrify() done")    
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error: %s" % error)
         conn.rollback()
+    finally:
         cursor.close()
-        return 1
-    print("execute_mogrify() done")
-    cursor.close()
 def query(conn ,query):
     """
     Using cursor.mogrify() to build the bulk insert query
