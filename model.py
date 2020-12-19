@@ -10,14 +10,15 @@ def getPriceData(dayInterval):
     df = df.rename(columns={'timestamp':'datetime'})
     return df
 
-def getMinutePriceData(dayInterval):
+def getMinutePriceData(start,end):
     conn = db.connect()
-    df = db.query(conn,
-    f'''SELECT s.symbol,s.name,sp.* from stock_price_intraday sp 
+    sqlQuery = f'''SELECT s.symbol,s.name,sp.* from stock_price_intraday sp 
         INNER JOIN stock s ON s.id = sp.stock_id
-        WHERE timestamp > now() -  INTERVAL '{dayInterval} days'
+        WHERE timestamp >= '{start}' and timestamp <= '{end}' 
         ORDER BY s.name,timestamp
-        ''')
+        '''
+    df = db.query(conn,sqlQuery
+    )
     df = df.rename(columns={'timestamp':'datetime'})
     return df
 
