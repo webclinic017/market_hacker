@@ -27,7 +27,6 @@ def zerodha(request_token,load_data,dayRange):
     print(int(dayRange))
     if  load_data == 'True':
         df = store.getFullPriceData(kite,int(dayRange),'5minute')
-        store.writeToDB(df,table='stock_price_intraday')
     return {"sucess": True}
 
 @app.get("/stocks")
