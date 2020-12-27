@@ -133,3 +133,5 @@ config
 certs
 run.bat
 final.csv
+log*
+output

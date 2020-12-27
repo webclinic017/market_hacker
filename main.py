@@ -21,12 +21,11 @@ def read_root(dayRange,request: Request):
     return stocks
 
 @app.get("/")
-def zerodha(request_token,load_data,dayRange):
+def zerodha(request_token,load_data = False,dayRange = None):
     global kite
     kite = store.getKiteConnector(request_token)
-    print(int(dayRange))
     if  load_data == 'True':
-        df = store.getFullPriceData(kite,int(dayRange),'5minute')
+        df = store.getFullPriceData(kite,int(dayRange),'minute')
     return {"sucess": True}
 
 @app.get("/stocks")

@@ -37,7 +37,6 @@ def execute_mogrify(conn, df, table):
     cols = ','.join(list(df.columns))
     # SQL quert to execute
     cursor = conn.cursor()
-    #values = [cursor.mogrify("(%s,%s,%s,%s,%s)", tup).decode('utf8') for tup in tuples]
     values = [cursor.mogrify("(%s,%s,%s,%s,%s,%s,%s)", tup).decode('utf8') for tup in tuples]
     query  = "INSERT INTO %s(%s) VALUES " % (table, cols) + ",".join(values)
     

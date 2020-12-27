@@ -40,26 +40,28 @@ def getKiteConnector(reqToken):
     return kite
 def getFullPriceData(kite,dayRange,interval):
     fullDf = pd.DataFrame()    
-    stockData = getStockData()
+    stockData = {'12680706':221626}
+    #stockData = getStockData()
     today = datetime.now()
     start = (today - timedelta(days = dayRange))
     end = today
     max_date_df = getMaxDate()
     max_timestamp = max_date_df['max_timestamp'][0]
-    if max_timestamp:
-        start = pd.to_datetime(max_date_df['max_timestamp'][0])  
-        print(f''' start from db {start}''') 
+    # if max_timestamp:
+    #     start = pd.to_datetime(max_date_df['max_timestamp'][0])  
+    #     print(f''' start from db {start}''') 
     print(f"""start{start} ; end {end}""")
     date1 = start
     date2 = (start + timedelta(days = 60))
     if(date2>end):
         date2 = end
     while end >= date1:
-        fullDf = pd.DataFrame()
+        fullDf = pd.DataFrame()                   
         strDate1 = date1.strftime("%Y-%m-%d %H:%M:%S") 
         strDate2 = date2.strftime("%Y-%m-%d") +' 23:59:59'
         print(strDate1,strDate2)
         for instr in stockData:
+            print(instr)
             rawData = getHistoryData(kite,instr,strDate1,strDate2,interval)
             df = pd.DataFrame(rawData)        
             df['stock_id'] = pd.Series([stockData[instr] for x in range(len(df.index))], index=df.index)
@@ -67,12 +69,12 @@ def getFullPriceData(kite,dayRange,interval):
                 fullDf = df
             else:
                 fullDf = fullDf.append(df)
-        date1 = date1 + timedelta(days = 60)
-        date2 = date2 + timedelta(days = 60)
         if(fullDf.empty != True):
             writeToDB(fullDf,table='stock_price_intraday')
         else:
             print(f''' empty df ''')
+        date1 = date1 + timedelta(days = 60)
+        date2 = date2 + timedelta(days = 60)
     return fullDf
 def writeToDB(df,table="stock_price"):
     conn = db.connect()    

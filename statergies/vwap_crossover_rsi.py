@@ -71,10 +71,7 @@ if __name__ == '__main__':
     # Get data from database
     allMinutePriceData = model.getMinutePriceData(start = datetime(2020,1,1) ,end = datetime(2020,12,1))    
     finalOutput = {}
-    excludedSymbols = ['BAJAJHLDNG','HINDZINC','WIPRO','ONGC','ADANIGREEN','ADANITRANS','DMART']
     symbols = allMinutePriceData['symbol'].unique().tolist()
-    for ex_symbol in excludedSymbols:
-        symbols.remove(ex_symbol)
     for symbol in symbols:
         #print(symbol)        
         minutePriceData = allMinutePriceData[allMinutePriceData['symbol'] == symbol]
@@ -110,6 +107,7 @@ if __name__ == '__main__':
         output = pd.Series(output)
         finalOutput[symbol] = output
     result = pd.DataFrame(finalOutput)
+
     print(result)
     print(result.sum())
     print(result.sum().mean())
