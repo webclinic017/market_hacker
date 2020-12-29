@@ -51,9 +51,12 @@ def get_max_min(prices, smoothing, window_range):
     maxima = pd.DataFrame(prices.loc[price_local_max_dt])
     minima = pd.DataFrame(prices.loc[price_local_min_dt])
     max_min = pd.concat([maxima, minima]).sort_index()
+
     max_min.index.name = 'date'
+    print(max_min.index['date'])    
+    print(max_min.date)
     max_min = max_min.reset_index()
-    max_min = max_min[~max_min.date.duplicated()]
+    max_min = max_min[~max_min.index.duplicated()]
     p = prices.reset_index()   
     # print('p')
     # print(p)
@@ -155,7 +158,7 @@ if __name__ == '__main__':
         end = datetime(2020,12,1),stockSymbol = 'INFY')    
     resampled_data = allMinutePriceData
     resampled_data = resampled_data.rename(columns={'datetime':'timestamp'})
-    # resampled_data = resampled_data.set_index('timestamp',append = True)
+    resampled_data = resampled_data.set_index('timestamp',append = True)
     print(resampled_data)
  
     ema_list = [3,10,20,30]

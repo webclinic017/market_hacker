@@ -69,17 +69,26 @@ class VWAPRSICO(bt.Strategy):
 if __name__ == '__main__':
 
     # Get data from database
-    allMinutePriceData = model.getMinutePriceData(start = datetime(2020,1,1) ,end = datetime(2020,12,1))    
+    allMinutePriceData = model.getMinutePriceData(start = datetime(2020,8,1) ,end = datetime(2020,12,1),
+    stockSymbol = 'BANKNIFTY20DECFUT')       
     finalOutput = {}
     symbols = allMinutePriceData['symbol'].unique().tolist()
     for symbol in symbols:
         #print(symbol)        
         minutePriceData = allMinutePriceData[allMinutePriceData['symbol'] == symbol]
-        minutePriceData = minutePriceData.set_index('datetime')        
+        minutePriceData = minutePriceData.set_index('datetime')    
         output = {}
         DFList = [group[1] for group in minutePriceData.groupby(minutePriceData.index.date)]        
         for df in DFList:
             cerebro = bt.Cerebro()
+            print(df.index.date[0])
+            print('starting resampling..')
+            df = df.resample('5T', origin='start', closed='left', label='left').agg({'open': 'first',
+                                                                            'high': 'max',
+                                                                            'low': 'min',
+                                                                            'close': 'last',
+                                                                            'volume':'sum'}).dropna()  
+            print('stopping resampling..')    
             minutePriceData = bt.feeds.PandasData(
                 dataname=df)
             # Add a strategy
@@ -92,7 +101,7 @@ if __name__ == '__main__':
             #cerebro.addsizer(bt.sizers.AllInSizerInt)
             # Print out the starting conditions
             startvalue =  cerebro.broker.getvalue()
-            #print('Starting Portfolio Value: %.2f' % startvalue)
+            print('Starting Portfolio Value: %.2f' % startvalue)
 
             # Run over everything
             cerebro.run()
@@ -100,7 +109,7 @@ if __name__ == '__main__':
 
             endvalue =  cerebro.broker.getvalue()
             # Print out the final result
-            #print('Final Portfolio Value: %.2f' % endvalue)
+            print('Final Portfolio Value: %.2f' % endvalue)
             output[df.index.date[0]] = ((endvalue-startvalue)*100/startvalue) 
             #break
 
